@@ -1,0 +1,62 @@
+#include <iostream>
+#include <cmath>
+#include <random>
+
+using namespace std;
+
+random_device rd;
+mt19937 gen(rd());
+uniform_real_distribution<double> dis(0.0, 1.0);
+
+// Objective function - change this according to your problem
+double objectiveFunction(double x) {
+    return sin(x) + sin(0.5 * x);
+}
+
+double acceptanceProbability(double energy, double newEnergy, double temperature) {
+    if (newEnergy < energy) {
+        return 1.0;
+    }
+    return exp((energy - newEnergy) / temperature);
+}
+
+double simulatedAnnealing(double initialTemperature, double coolingRate, double minTemperature, double initialSolution) {
+    double currentSolution = initialSolution;
+    double bestSolution = initialSolution;
+
+    double currentEnergy = objectiveFunction(currentSolution);
+    double bestEnergy = currentEnergy;
+
+    while (initialTemperature > minTemperature) {
+        double newSolution = currentSolution + dis(gen) - 0.5; // Generate a new neighboring solution
+        double newEnergy = objectiveFunction(newSolution);
+
+        if (acceptanceProbability(currentEnergy, newEnergy, initialTemperature) > dis(gen)) {
+            currentSolution = newSolution;
+            currentEnergy = newEnergy;
+        }
+
+        if (newEnergy < bestEnergy) {
+            bestSolution = newSolution;
+            bestEnergy = newEnergy;
+        }
+
+        initialTemperature *= coolingRate; // Cool down the temperature
+    }
+
+    return bestSolution;
+}
+
+int main() {
+    double initialTemperature = 100.0;
+    double coolingRate = 0.95;
+    double minTemperature = 0.1;
+    double initialSolution = 0.0;
+
+    double bestSolution = simulatedAnnealing(initialTemperature, coolingRate, minTemperature, initialSolution);
+
+    cout << "Best Solution: " << bestSolution << endl;
+    cout << "Best Objective Value: " << objectiveFunction(bestSolution) << endl;
+
+    return 0;
+}
